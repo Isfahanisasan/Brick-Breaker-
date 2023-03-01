@@ -11,15 +11,18 @@ export class BrickBreaker extends Scene {
 
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         this.shapes = {
-
+            cube: new defs.Cube(),
         };
 
         // *** Materials
         this.materials = {
-
+            shiny: new Material(new defs.Phong_Shader(1),
+                {ambient: 0.2, diffusivity: 0.8, specularity: 0.5, color: hex_color("#80FFFF")}),
+            matte: new Material(new defs.Phong_Shader(1),
+                {ambient: 0.8, diffusivity: 0.2, color: hex_color("#80FFFF")}),
         }
 
-        this.initial_camera_location = Mat4.look_at(vec3(0, 10, 20), vec3(0, 0, 0), vec3(0, 1, 0));
+        this.initial_camera_location = Mat4.look_at(vec3(16, 16, 50), vec3(16, 16, 0), vec3(0, 1, 0));
     }
 
     make_control_panel() {
@@ -46,8 +49,21 @@ export class BrickBreaker extends Scene {
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, .1, 1000);
 
+        const light_position = vec4(8, 0, 100, 1);
+        // Sun attributes
+        // The parameters of the Light are: position, color, size
+        program_state.lights = [new Light(light_position, color(1,1,1,1), 10000)];
 
         const t = program_state.animation_time / 1000, dt = program_state.animation_delta_time / 1000;
+
+        // Wall
+        // stretch Y by 16 -> translate Y +16, X -0.5
+        const wall_side_model_transform = Mat4.translation(0,16,0).times(Mat4.scale(1,16,1));
+        this.shapes.cube.draw(context, program_state, Mat4.translation(-1,0,0).times(wall_side_model_transform),
+            this.materials.shiny);
+        this.shapes.cube.draw(context, program_state, Mat4.translation(33,0,0).times(wall_side_model_transform),
+            this.materials.shiny);
+        this.shapes.cube.draw(context, program_state, Mat4.identity(), this.materials.matte);
 
     }
 }
