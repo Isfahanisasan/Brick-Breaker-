@@ -53,8 +53,8 @@ export class BrickBreaker extends Scene {
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
 
-        this.key_triggered_button("Left", ["x"], () => {(this.dir >= -2) ? (this.dir -= 1) : null});
-        this.key_triggered_button("Right", ["c"], () => {(this.dir <= 2) ? (this.dir += 1) : null});
+        this.key_triggered_button("Left", ["ArrowLeft"], () => {(this.dir >= -2) ? (this.dir -= 1) : null});
+        this.key_triggered_button("Right", ["ArrowRight"], () => {(this.dir <= 2) ? (this.dir += 1) : null});
         this.new_line();
     }
 
@@ -95,7 +95,7 @@ export class BrickBreaker extends Scene {
             }
         }
 
-        this.shapes.cube.draw(context, program_state, Mat4.identity(), this.materials.matte);
+        //this.shapes.cube.draw(context, program_state, Mat4.identity(), this.materials.matte);
 
 
 
