@@ -12,7 +12,10 @@ export class BrickBreaker extends Scene {
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         this.shapes = {
             cube: new defs.Cube(),
+            platform: new defs.Cube,
+
         };
+        this.dir = 0;
 
         // *** Materials
         this.materials = {
@@ -27,15 +30,10 @@ export class BrickBreaker extends Scene {
 
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
-        this.key_triggered_button("View solar system", ["Control", "0"], () => this.attached = () => null);
+
+        this.key_triggered_button("Left", ["x"], () => {(this.dir >= -2) ? (this.dir -= 1) : null});
+        this.key_triggered_button("Right", ["c"], () => {(this.dir <= 2) ? (this.dir += 1) : null});
         this.new_line();
-        this.key_triggered_button("Attach to planet 1", ["Control", "1"], () => this.attached = () => this.planet_1);
-        this.key_triggered_button("Attach to planet 2", ["Control", "2"], () => this.attached = () => this.planet_2);
-        this.new_line();
-        this.key_triggered_button("Attach to planet 3", ["Control", "3"], () => this.attached = () => this.planet_3);
-        this.key_triggered_button("Attach to planet 4", ["Control", "4"], () => this.attached = () => this.planet_4);
-        this.new_line();
-        this.key_triggered_button("Attach to moon", ["Control", "m"], () => this.attached = () => this.moon);
     }
 
 
@@ -49,7 +47,7 @@ export class BrickBreaker extends Scene {
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, .1, 1000);
 
-        const light_position = vec4(8, 0, 100, 1);
+        const light_position = vec4(16, 16, 50, 1);
         // Sun attributes
         // The parameters of the Light are: position, color, size
         program_state.lights = [new Light(light_position, color(1,1,1,1), 10000)];
@@ -64,6 +62,13 @@ export class BrickBreaker extends Scene {
         this.shapes.cube.draw(context, program_state, Mat4.translation(33,0,0).times(wall_side_model_transform),
             this.materials.shiny);
         this.shapes.cube.draw(context, program_state, Mat4.identity(), this.materials.matte);
+
+
+
+        var platform_transform = Mat4.identity();
+        platform_transform = Mat4.translation(16,1,0).times(platform_transform.times(Mat4.scale(4,1,1)));
+        platform_transform = platform_transform.times(Mat4.translation(this.dir, 0, 0));
+        this.shapes.platform.draw(context, program_state, platform_transform, this.materials.shiny);
 
     }
 }
