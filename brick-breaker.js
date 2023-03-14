@@ -13,9 +13,11 @@ export class BrickBreaker extends Scene {
         this.shapes = {
             cube: new defs.Cube(),
             platform: new defs.Cube,
+            ball: new defs.Subdivision_Sphere(4),
 
         };
         this.dir = 0;
+        this.pause = true;
 
         // *** Materials
         this.materials = {
@@ -23,6 +25,8 @@ export class BrickBreaker extends Scene {
                 {ambient: 0.5, diffusivity: 0.8, specularity: 0.9, color: hex_color("#80FFFF")}),
             matte: new Material(new defs.Phong_Shader(1),
                 {ambient: 0.3, diffusivity: 0, color: hex_color("#80FFFF")}),
+            ball: new Material(new defs.Phong_Shader(),
+                {ambient:1, diffusivity: 1, color: hex_color("#B08040")}),
         }
 
         this.initial_camera_location = Mat4.look_at(vec3(16, 16, 50), vec3(16, 16, 0), vec3(0, 1, 0));
@@ -53,8 +57,9 @@ export class BrickBreaker extends Scene {
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
 
-        this.key_triggered_button("Left", ["ArrowLeft"], () => {(this.dir >= -2) ? (this.dir -= 1) : null});
-        this.key_triggered_button("Right", ["ArrowRight"], () => {(this.dir <= 2) ? (this.dir += 1) : null});
+        this.key_triggered_button("Left", ["ArrowLeft"], () => {(this.dir >= -11) ? (this.dir -= 1) : null});
+        this.key_triggered_button("Right", ["ArrowRight"], () => {(this.dir <= 11) ? (this.dir += 1) : null});
+        this.key_triggered_button("start/pause", ["x"], () => {this.pause = !this.pause});
         this.new_line();
     }
 
@@ -95,14 +100,42 @@ export class BrickBreaker extends Scene {
             }
         }
 
-        //this.shapes.cube.draw(context, program_state, Mat4.identity(), this.materials.matte);
+        //this.shapes.cube.draw(context, program_state, Mat4.identity(), this.materials.matt
 
 
 
+
+        //platform
+        var ball_platform_transform = Mat4.identity();
         var platform_transform = Mat4.identity();
-        platform_transform = Mat4.translation(16,1,0).times(platform_transform.times(Mat4.scale(4,1,1)));
-        platform_transform = platform_transform.times(Mat4.translation(this.dir, 0, 0));
-        this.shapes.platform.draw(context, program_state, platform_transform, this.materials.shiny);
 
+        ball_platform_transform = Mat4.translation(16,1,0);
+        ball_platform_transform = ball_platform_transform.times(Mat4.translation(this.dir, 0, 0));
+
+
+        var platform_transform = ball_platform_transform.times(Mat4.scale(4,1,1));
+
+
+        var ball_transform = ball_platform_transform.times(Mat4.translation(0,1,0));
+
+
+
+        // var ball_transform = Mat4.identity();
+        if(!this.pause){
+            ball_transform = ball_transform.times(Mat4.translation(2 * t,2 * t,0));
+        }
+
+
+
+
+
+        // if(this.pause){
+        //     ball_transform = platform_transform;
+        // }
+        // else{
+        //     ball_transform = ball_transform.times(Mat4.translation(1,1,0))
+        // }
+        this.shapes.ball.draw(context, program_state, ball_transform, this.materials.ball);
+        this.shapes.platform.draw(context, program_state, platform_transform, this.materials.shiny);
     }
 }
