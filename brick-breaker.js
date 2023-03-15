@@ -7,8 +7,8 @@ const {
 export class Ball{
     constructor(){
         this.pos = vec3(0,3,0)
-        this.vel = vec3(5,5,0)
-        this.acc = vec3(0,0,0)
+        this.vel = vec3(8,8,0)
+        // this.acc = vec3(0,0,0)
 
         this.transform = Mat4.identity();
 
@@ -26,12 +26,10 @@ export class Ball{
 
     update(dt, start) {
         if(start){
-            this.vel = this.vel.plus(this.acc.times(dt));
+            // this.vel = this.vel.plus(this.vel.times(dt));
             this.pos = this.pos.plus(this.vel.times(dt));
             this.transform = Mat4.identity().times(Mat4.translation(this.pos[0], this.pos[1], this.pos[2]));
         }
-
-
 
     }
 
@@ -47,11 +45,13 @@ export class Ball{
 
         let platform_x = platform.pos[0];
         let platform_y = platform.pos[1];
-
-        if(this.dist(x, y, platform_x, platform_y) <= 2 && y > 0){
-            console.log('platform hit');
+        //hit on top of platform
+        if((y  - platform_y) < 2 && Math.abs(x - platform_x ) < 2){
             this.vel[1] = -1 * this.vel[1];
         }
+        // else if(Math.abs(x - platform_x ) < 2 && (y  - platform_y) < 1){
+        //     this.vel[0] = -1 * this.vel[0];
+        // }
 
     }
 
@@ -75,20 +75,46 @@ export class Ball{
 
     }
 
-    dist(x1,y1, x2,y2){
-        return Math.sqrt((x2-x1) * (x2-x1) + (y2-y1) * (y2-y1))
-    }
+    // dist(x1,y1, x2,y2){
+    //     return Math.sqrt((x2-x1) * (x2-x1) + (y2-y1) * (y2-y1))
+    // }
     checkCollisionWithBricks(brickGrid){
-        let brick_positions = brickGrid.brickPosition
+        let brick_positions = brickGrid.brickPosition;
+        let brick_health = brickGrid.brickHealth;
+
         let x = this.pos[0];
         let y = this.pos[1];
         for (let i = 0; i < 8; i++) {
             for (let j = 0; j < 8; j++) {
-                //bottom hit
-                if(this.dist(x, y, brick_positions[i][j].pos[0], brick_positions[i][j].pos[1]) <= 2 && y < brick_positions[i][j].pos[1]){
-                    this.vel[1] = -1 * this.vel[1];
-                    console.log('brick bottom hit')
-
+                //top of the brick hit
+                if(brick_health[i][j] != 0){
+                    if(Math.abs(y  - brick_positions[i][j][1]) < 2
+                        && Math.abs(x - brick_positions[i][j][0] ) >= 2){
+                        this.vel[1] = -1 * this.vel[1];
+                        // brick_health[i][j] -= 1;
+                        console.log('brick top/bottom hit');
+                    }
+                    // else if((y  - brick_positions[i][j][1]) > -2
+                    //     && ((y  - brick_positions[i][j][1]) < 0)
+                    //     && Math.abs(x - brick_positions[i][j][0] ) < 2){
+                    //     //bottom hit
+                    //     this.vel[1] = -1 * this.vel[1];
+                    //     brick_health[i][j] -= 1;
+                    //     this.vel[1] = -1 * this.vel[1];
+                    //     console.log('brick bottom hit');
+                    // }
+                    else if(Math.abs(y  - brick_positions[i][j][1]) >= 2
+                        && Math.abs(x - brick_positions[i][j][0] ) < 2){
+                        this.vel[0] = -1 * this.vel[0];
+                        // brick_health[i][j] -= 1;
+                        console.log('brick side hit');
+                    }
+                    else if(Math.abs(y  - brick_positions[i][j][1]) == 2
+                        && Math.abs(x - brick_positions[i][j][0] ) == 2){
+                        //corner hig
+                        this.vel[0] = -1 * this.vel[0];
+                        this.vel[1] = -1 * this.vel[1];
+                    }
                 }
             }
             }
@@ -168,7 +194,11 @@ x
     show(context, program_state){
         for (let i = 0; i < 8; i++) {
             for (let j = 0; j < 8; j++) {
-                this.draw_individual_cube(i, j, context, program_state)
+                if(this.brickHealth != 0){
+                    this.draw_individual_cube(i, j, context, program_state)
+
+                }
+
             }
         }
     }
@@ -346,6 +376,7 @@ export class BrickBreaker extends Scene {
         // }
         this.frame.show(context, program_state);
         this.platform.show(context, program_state, this.platform_position);
+        this.ball.checkCollisionWithBricks(this.brickGrid);
 
 
 
@@ -353,11 +384,10 @@ export class BrickBreaker extends Scene {
         this.ball.checkCollisionWithPlatform(this.platform);
         // this.pause = this.ball.checkIfLost(this.pause);
         //check if lost
-        if(this.ball.pos[1] <= 0){
+        if(this.ball.pos[1] <= -1){
             this.pause = !this.pause;
             this.ball.bindToPlatform(this.platform, this.pause);
         }
-
 
         this.ball.update(dt, !this.pause);
         this.ball.bindToPlatform(this.platform, this.pause);
