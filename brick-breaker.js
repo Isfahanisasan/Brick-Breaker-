@@ -7,7 +7,7 @@ const {
 export class Ball{
     constructor(){
         this.pos = vec3(0,3,0)
-        this.vel = vec3(0,1,0)
+        this.vel = vec3(5,5,0)
         this.acc = vec3(0,0,0)
 
         this.transform = Mat4.identity();
@@ -15,13 +15,9 @@ export class Ball{
         this.shape = new defs.Subdivision_Sphere(3)
         this.material = new Material(new defs.Phong_Shader(),
             {ambient: .4, diffusivity: .6, color: hex_color("#f5a42a")})
-
         this.hit = []
     }
 
-    applyForce(f){
-        this.acc = this.acc.plus(f)
-    }
 
     //  Updates the position, velocity, and acceleration by euler's method
     /* velocity = velocity + acceleration * delta_time
@@ -32,7 +28,6 @@ export class Ball{
         if(start){
             this.vel = this.vel.plus(this.acc.times(dt));
             this.pos = this.pos.plus(this.vel.times(dt));
-            this.acc = this.acc.times(.1);
             this.transform = Mat4.identity().times(Mat4.translation(this.pos[0], this.pos[1], this.pos[2]));
         }
 
@@ -40,19 +35,74 @@ export class Ball{
 
     }
 
-    bindToPlatform(platform_position, reset){
+    bindToPlatform(platform, reset){
         if(reset){
-
-            this.pos = vec3(4 * platform_position, this.pos[1], this.pos[2]);
-
+            this.pos = vec3(platform.pos[0], platform.pos[1] + 2, this.pos[2]);
         }
+    }
+
+    checkCollisionWithPlatform(platform){
+        let x = this.pos[0];
+        let y = this.pos[1];
+
+        let platform_x = platform.pos[0];
+        let platform_y = platform.pos[1];
+
+        if(this.dist(x, y, platform_x, platform_y) <= 2 && y > 0){
+            console.log('platform hit');
+            this.vel[1] = -1 * this.vel[1];
+        }
+
+    }
+
+    checkCollisionWithWalls(){
+        if(this.pos[0] > 31){
+            //right side wall
+            this.vel[0] = -1 * this.vel[0];
+            console.log('right wall hit');
+        }
+        else if(this.pos[0] < 1){
+            //left side wall
+            this.vel[0] = -1 * this.vel[0];
+            console.log('left wall hit');
+        }
+
+        //collision with top
+        if(this.pos[1] > 31){
+            this.vel[1] = -1 * this.vel[1];
+            console.log('ceiling hit');
+        }
+
     }
 
     dist(x1,y1, x2,y2){
         return Math.sqrt((x2-x1) * (x2-x1) + (y2-y1) * (y2-y1))
     }
+    checkCollisionWithBricks(brickGrid){
+        let brick_positions = brickGrid.brickPosition
+        let x = this.pos[0];
+        let y = this.pos[1];
+        for (let i = 0; i < 8; i++) {
+            for (let j = 0; j < 8; j++) {
+                //bottom hit
+                if(this.dist(x, y, brick_positions[i][j].pos[0], brick_positions[i][j].pos[1]) <= 2 && y < brick_positions[i][j].pos[1]){
+                    this.vel[1] = -1 * this.vel[1];
+                    console.log('brick bottom hit')
 
-    // checkCollison(platform){
+                }
+            }
+            }
+    }
+
+    // checkIfLost(reset){
+    //     // if(!reset && this.pos[1] <= 0) {
+    //     //     return !reset;
+    //     // }
+    //
+    //     return (!reset) && (this.pos[1] <= 0);
+    // }
+
+
 
     // }
     // Displays the ball
@@ -63,19 +113,84 @@ export class Ball{
     }
 }
 
-export class Platform{
-    constructor(platform_pos){
-        this.platform_transform = (Mat4.scale(4,1,1));
+export class Brick_Grid{
 
+    constructor(){
         this.shape = new defs.Cube()
+        this.brickHealth = [
+            [2,2,2,2,2,2,2,2],
+            [2,2,2,2,2,2,2,2],
+            [2,2,2,2,2,2,2,2],
+            [2,2,2,2,2,2,2,2],
+            [2,2,2,2,2,2,2,2],
+            [2,2,2,2,2,2,2,2],
+            [2,2,2,2,2,2,2,2],
+            [2,2,2,2,2,2,2,2],
+        ];
+        this.brickPosition = [];
+        for (let i = 0; i < 8; i++) {
+            let row= [];
+            for (let j = 0; j < 8; j++) {
+                // row.push(color(Math.random()/2+0.5, Math.random()/2+0.5, Math.random()/2+0.5, 1.0));
+                row.push(vec3(9 + 2 * j, 13 + 2 * i, 0));
+            }
+            this.brickPosition.push(row);
+        }
+        this.brickColors = [];
+        for (let i = 0; i < 8; i++) {
+            let row= [];
+            for (let j = 0; j < 8; j++) {
+                // row.push(color(Math.random()/2+0.5, Math.random()/2+0.5, Math.random()/2+0.5, 1.0));
+                row.push(color(Math.random(), Math.random(), Math.random(), 1.0));
+            }
+            this.brickColors.push(row);
+        }
+
+        this.materials = {
+            shiny: new Material(new defs.Phong_Shader(1),
+                {ambient: 0.5, diffusivity: 0.8, specularity: 0.9, color: hex_color("#80FFFF")}),
+            matte: new Material(new defs.Phong_Shader(1),
+                {ambient: 0.3, diffusivity: 0, color: hex_color("#80FFFF")}),
+        }
+    }
+
+x
+
+    draw_individual_cube(i, j, context, program_state){
+        if(this.brickHealth[i][j] == 2){
+            let current_brick_pos = this.brickPosition[i][j];
+            this.shape.draw(context, program_state, Mat4.identity().times(Mat4.translation(current_brick_pos[0], current_brick_pos[1],current_brick_pos[2])),
+                this.materials.shiny.override(this.brickColors[i][j]));
+        }
+
+    }
+
+    show(context, program_state){
+        for (let i = 0; i < 8; i++) {
+            for (let j = 0; j < 8; j++) {
+                this.draw_individual_cube(i, j, context, program_state)
+            }
+        }
+    }
+
+}
+
+export class Platform{
+    constructor(){
+        // this.platform_transform = (Mat4.scale(4,1,1));
+        this.platform_transform = Mat4.identity();
+        this.pos = vec3(0,1,0);
+
+        this.shape = new defs.Cube(),
         this.material = new Material(new defs.Phong_Shader(),
             {ambient: .4, diffusivity: .8, specularity: .3, color: hex_color("#0b518a")})
     }
 
     // Displays the table
     show(context, program_state, platform_pos) {
+        this.pos[0] = platform_pos;
 
-        this.shape.draw(context, program_state, this.platform_transform.times(Mat4.translation(platform_pos,1,0)), this.material);
+        this.shape.draw(context, program_state, this.platform_transform.times(Mat4.translation(this.pos[0], this.pos[1], this.pos[2])), this.material);
 
     }
 }
@@ -112,6 +227,7 @@ export class BrickBreaker extends Scene {
         this.frame = new Frame();
         this.platform = new Platform();
         this.ball = new Ball();
+        this.brickGrid = new Brick_Grid();
         // At the beginning of our program, load one of each of these shape definitions onto the GPU.
         this.shapes = {
             cube: new defs.Cube(),
@@ -119,8 +235,9 @@ export class BrickBreaker extends Scene {
             // ball: new defs.Subdivision_Sphere(4),
 
         };
-        this.platform_position = 4;
+        this.platform_position = 16;
         this.pause = true;
+
 
         // *** Materials
         this.materials = {
@@ -133,35 +250,35 @@ export class BrickBreaker extends Scene {
         }
 
         this.initial_camera_location = Mat4.look_at(vec3(16, 16, 50), vec3(16, 16, 0), vec3(0, 1, 0));
-
-        this.brickHealth = [
-            [2,1,2,1,1,2,1,2],
-            [2,2,2,2,2,2,2,2],
-            [2,2,2,2,2,2,2,1],
-            [2,2,2,2,2,2,2,2],
-            [2,2,2,2,2,2,2,2],
-            [2,2,2,2,2,2,2,2],
-            [2,2,2,2,2,2,2,2],
-            [2,2,2,2,2,2,1,2],
-        ];
-
-        this.brickColors = [];
-        for (let i = 0; i < 8; i++) {
-            let row= [];
-            for (let j = 0; j < 8; j++) {
-                // row.push(color(Math.random()/2+0.5, Math.random()/2+0.5, Math.random()/2+0.5, 1.0));
-                row.push(color(Math.random(), Math.random(), Math.random(), 1.0));
-            }
-            this.brickColors.push(row);
-        }
+        //
+        // this.brickHealth = [
+        //     [2,1,2,1,1,2,1,2],
+        //     [2,2,2,2,2,2,2,2],
+        //     [2,2,2,2,2,2,2,1],
+        //     [2,2,2,2,2,2,2,2],
+        //     [2,2,2,2,2,2,2,2],
+        //     [2,2,2,2,2,2,2,2],
+        //     [2,2,2,2,2,2,2,2],
+        //     [2,2,2,2,2,2,1,2],
+        // ];
+        //
+        // this.brickColors = [];
+        // for (let i = 0; i < 8; i++) {
+        //     let row= [];
+        //     for (let j = 0; j < 8; j++) {
+        //         // row.push(color(Math.random()/2+0.5, Math.random()/2+0.5, Math.random()/2+0.5, 1.0));
+        //         row.push(color(Math.random(), Math.random(), Math.random(), 1.0));
+        //     }
+        //     this.brickColors.push(row);
+        // }
 
     }
 
     make_control_panel() {
         // Draw the scene's buttons, setup their actions and keyboard shortcuts, and monitor live measurements.
 
-        this.key_triggered_button("Left", ["ArrowLeft"], () => {(this.platform_position >= 1.25) ? (this.platform_position -= 0.25) : null});
-        this.key_triggered_button("Right", ["ArrowRight"], () => {(this.platform_position <= 6.75) ? (this.platform_position += 0.25) : null});
+        this.key_triggered_button("Left", ["ArrowLeft"], () => {(this.platform_position >= 2) ? (this.platform_position -= 1) : null});
+        this.key_triggered_button("Right", ["ArrowRight"], () => {(this.platform_position <= 30) ? (this.platform_position += 1) : null});
         this.key_triggered_button("start/pause", ["x"], () => {this.pause = !this.pause});
         this.new_line();
     }
@@ -177,8 +294,7 @@ export class BrickBreaker extends Scene {
         program_state.projection_transform = Mat4.perspective(
             Math.PI / 4, context.width / context.height, .1, 1000);
 
-        const light_position = vec4(16, 16, 50, 1);
-        console.log('hi');
+        const light_position = vec4(16, 16, -50, 1);
         // Sun attributes
         // The parameters of the Light are: position, color, size
         program_state.lights = [new Light(light_position, color(1,1,1,1), 10000)];
@@ -197,12 +313,12 @@ export class BrickBreaker extends Scene {
         //     this.materials.shiny);
 
         // Bricks
-        for (let i = 0; i < 8; i++) {
-            for (let j = 0; j < 8; j++) {
-                this.shapes.cube.draw(context, program_state, Mat4.translation(9 + 2 * j, 13 + 2 * i, 0),
-                    (this.brickHealth[i][j] === 1 ? this.materials.matte : this.materials.shiny).override(this.brickColors[i][j]))
-            }
-        }
+        // for (let i = 0; i < 8; i++) {
+        //     for (let j = 0; j < 8; j++) {
+        //         this.shapes.cube.draw(context, program_state, Mat4.translation(9 + 2 * j, 13 + 2 * i, 0),
+        //             (this.brickHealth[i][j] === 1 ? this.materials.matte : this.materials.shiny).override(this.brickColors[i][j]))
+        //     }
+        // }
 
         //this.shapes.cube.draw(context, program_state, Mat4.identity(), this.materials.matt
 
@@ -231,9 +347,22 @@ export class BrickBreaker extends Scene {
         this.frame.show(context, program_state);
         this.platform.show(context, program_state, this.platform_position);
 
+
+
+        this.ball.checkCollisionWithWalls();
+        this.ball.checkCollisionWithPlatform(this.platform);
+        // this.pause = this.ball.checkIfLost(this.pause);
+        //check if lost
+        if(this.ball.pos[1] <= 0){
+            this.pause = !this.pause;
+            this.ball.bindToPlatform(this.platform, this.pause);
+        }
+
+
         this.ball.update(dt, !this.pause);
-        this.ball.bindToPlatform(this.platform_position, this.pause);
+        this.ball.bindToPlatform(this.platform, this.pause);
         this.ball.show(context, program_state);
+        this.brickGrid.show(context, program_state)
 
 
 
