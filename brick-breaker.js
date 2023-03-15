@@ -1,4 +1,4 @@
-import {defs, tiny} from './examples/common.js';
+import { defs, tiny } from './examples/common.js';
 
 const {
     Vector, Vector3, vec, vec3, vec4, color, hex_color, Matrix, Mat4, Light, Shape, Material, Scene,
@@ -235,6 +235,121 @@ export class Frame{
             this.material);
     }
 }
+
+class ScoreDisplay {
+    constructor() {
+        this.score = 0;
+
+        this.cube = new defs.Cube;
+        this.material = new Material(new defs.Phong_Shader(),
+            {ambient: 1, diffusivity: .8, specularity: 0, color: hex_color("#FFFFFF")})
+
+        this.cathode_dict = {
+            0: [
+                [0,1,1,0],
+                [1,0,0,1],
+                [1,0,0,1],
+                [1,0,0,1],
+                [0,1,1,0]
+            ],
+            1: [
+                [1,1,1,0],
+                [0,0,1,0],
+                [0,0,1,0],
+                [0,0,1,0],
+                [1,1,1,1]
+            ],
+            2: [
+                [1,1,1,0],
+                [0,0,0,1],
+                [0,1,1,0],
+                [1,0,0,0],
+                [1,1,1,1]
+            ],
+            3: [
+                [1,1,1,0],
+                [0,0,0,1],
+                [0,1,1,0],
+                [0,0,0,1],
+                [1,1,1,0]
+            ],
+            4   : [
+                [0,0,1,0],
+                [0,1,0,0],
+                [1,0,0,1],
+                [1,1,1,1],
+                [0,0,0,1]
+            ],
+            5: [
+                [1,1,1,1],
+                [1,0,0,0],
+                [1,1,1,1],
+                [0,0,0,1],
+                [1,1,1,0]
+            ],
+            6: [
+                [0,1,1,1],
+                [1,0,0,0],
+                [1,1,1,1],
+                [1,0,0,1],
+                [0,1,1,0]
+            ],
+            7: [
+                [1,1,1,1],
+                [0,0,0,1],
+                [0,0,1,0],
+                [0,1,0,0],
+                [0,1,0,0]
+            ],
+            8: [
+                [0,1,1,0],
+                [1,0,0,1],
+                [0,1,1,0],
+                [1,0,0,1],
+                [1,1,1,1]
+            ],
+            9: [
+                [1,1,1,1],
+                [1,0,0,1],
+                [0,1,1,1],
+                [0,0,0,1],
+                [1,1,1,0]
+            ],
+        };
+
+
+    }
+
+    increment(amount) {
+        this.score += amount;
+    }
+
+    show(context, program_state) {
+        let score_temp = this.score;
+        let digit = null;
+        // let digit_mt = Mat4.scale(0.35,0.35,0.35);
+        let digit_mt = Mat4.translation(34,39,0).times(Mat4.scale(0.35,0.35,0.35)
+            .times(Mat4.translation(-8,0,0)));
+
+        do {
+            digit = score_temp % 10;
+            score_temp = Math.floor(score_temp/10);
+
+            // Draw the digit
+            for (let i = 0; i < 5; i++) {
+                for (let j = 0; j < 4; j++) {
+                    if (this.cathode_dict[digit][i][j]) {
+                        this.cube.draw(context, program_state,
+                            digit_mt.times(Mat4.translation(j * 2, i * -2, 0)), this.material);
+                    }
+                }
+            }
+
+            digit_mt = digit_mt.times(Mat4.translation(-10,0,0));
+        } while (score_temp !== 0)
+    }
+}
+
 export class BrickBreaker extends Scene {
     constructor() {
         // constructor(): Scenes begin by populating initial values like the Shapes and Materials they'll need.
@@ -249,9 +364,10 @@ export class BrickBreaker extends Scene {
             cube: new defs.Cube(),
             // platform: new defs.Cube,
             // ball: new defs.Subdivision_Sphere(4),
-
         };
         this.platform_position = 16;
+        this.score = new ScoreDisplay();
+
         this.pause = true;
 
 
@@ -265,28 +381,28 @@ export class BrickBreaker extends Scene {
                 {ambient:1, diffusivity: 1, color: hex_color("#B08040")}),
         }
 
-        this.initial_camera_location = Mat4.look_at(vec3(16, 16, 50), vec3(16, 16, 0), vec3(0, 1, 0));
-        //
-        // this.brickHealth = [
-        //     [2,1,2,1,1,2,1,2],
-        //     [2,2,2,2,2,2,2,2],
-        //     [2,2,2,2,2,2,2,1],
-        //     [2,2,2,2,2,2,2,2],
-        //     [2,2,2,2,2,2,2,2],
-        //     [2,2,2,2,2,2,2,2],
-        //     [2,2,2,2,2,2,2,2],
-        //     [2,2,2,2,2,2,1,2],
-        // ];
-        //
-        // this.brickColors = [];
-        // for (let i = 0; i < 8; i++) {
-        //     let row= [];
-        //     for (let j = 0; j < 8; j++) {
-        //         // row.push(color(Math.random()/2+0.5, Math.random()/2+0.5, Math.random()/2+0.5, 1.0));
-        //         row.push(color(Math.random(), Math.random(), Math.random(), 1.0));
-        //     }
-        //     this.brickColors.push(row);
-        // }
+        this.initial_camera_location = Mat4.look_at(vec3(16, 19, 55), vec3(16, 19, 0), vec3(0, 1, 0));
+
+        this.brickHealth = [
+            [2,1,2,1,1,2,1,2],
+            [2,2,2,2,2,2,2,2],
+            [2,2,2,2,2,2,2,1],
+            [2,2,2,2,2,2,2,2],
+            [2,2,2,2,2,2,2,2],
+            [2,2,2,2,2,2,2,2],
+            [2,2,2,2,2,2,2,2],
+            [2,2,2,2,2,2,1,2],
+        ];
+
+        this.brickColors = [];
+        for (let i = 0; i < 8; i++) {
+            let row= [];
+            for (let j = 0; j < 8; j++) {
+                // row.push(color(Math.random()/2+0.5, Math.random()/2+0.5, Math.random()/2+0.5, 1.0));
+                row.push(color(Math.random(), Math.random(), Math.random(), 1.0));
+            }
+            this.brickColors.push(row);
+        }
 
     }
 
@@ -398,7 +514,7 @@ export class BrickBreaker extends Scene {
         this.brickGrid.show(context, program_state);
 
 
-
+        this.score.show(context, program_state);
 
 
 
