@@ -6,6 +6,7 @@ const {
 
 export class Ball{
     constructor(){
+        this.difficulty = 1;
         this.pos = vec3(0,3,0)
         this.vel = vec3(8,8,0)
         // this.acc = vec3(0,0,0)
@@ -26,11 +27,9 @@ export class Ball{
 
     update(dt, start) {
         if(start){
-            // this.vel = this.vel.plus(this.vel.times(dt));
-            this.pos = this.pos.plus(this.vel.times(dt));
+            this.pos = this.pos.plus(this.vel.times(dt*this.difficulty));
             this.transform = Mat4.identity().times(Mat4.translation(this.pos[0], this.pos[1], this.pos[2]));
         }
-
     }
 
     bindToPlatform(platform, reset){
@@ -115,6 +114,10 @@ export class Ball{
     // }
 
 
+
+    setDifficulty(difficulty) {
+        this.difficulty = difficulty;
+    }
 
     // }
     // Displays the ball
@@ -404,6 +407,7 @@ export class BrickBreaker extends Scene {
             this.brickColors.push(row);
         }
 
+        this.difficulty = 1;
     }
 
     make_control_panel() {
@@ -412,11 +416,15 @@ export class BrickBreaker extends Scene {
         this.key_triggered_button("Left", ["ArrowLeft"], () => {(this.platform_position >= 2) ? (this.platform_position -= 1) : null});
         this.key_triggered_button("Right", ["ArrowRight"], () => {(this.platform_position <= 30) ? (this.platform_position += 1) : null});
         this.key_triggered_button("start/pause", ["x"], () => {this.pause = !this.pause});
+        this.key_triggered_button("Easy", ["e"], () => {this.ball.setDifficulty(1)});
+        this.key_triggered_button("Medium", ["m"], () => {this.ball.setDifficulty(2)});
+        this.key_triggered_button("Hard", ["h"], () => {this.ball.setDifficulty(3)});
         this.new_line();
     }
 
 
     display(context, program_state) {
+
         if (!context.scratchpad.controls) {
             this.children.push(context.scratchpad.controls = new defs.Movement_Controls());
             // Define the global camera and projection matrices, which are stored in program_state.
