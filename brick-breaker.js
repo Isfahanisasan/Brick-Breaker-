@@ -87,34 +87,20 @@ export class Ball{
         for (let i = 0; i < 8; i++) {
             for (let j = 0; j < 8; j++) {
                 //top of the brick hit
-                if(brick_health[i][j] != 0){
-                    if(Math.abs(y  - brick_positions[i][j][1]) < 2
-                        && Math.abs(x - brick_positions[i][j][0] ) >= 2){
+                if(brick_health[i][j] > 0){
+                    if(Math.abs(x - brick_positions[i][j][0] ) < 1
+                        && Math.abs(y  - brick_positions[i][j][1]) <= 2){
                         this.vel[1] = -1 * this.vel[1];
-                        // brick_health[i][j] -= 1;
+                        brick_health[i][j] -= 1;
                         console.log('brick top/bottom hit');
                     }
-                    // else if((y  - brick_positions[i][j][1]) > -2
-                    //     && ((y  - brick_positions[i][j][1]) < 0)
-                    //     && Math.abs(x - brick_positions[i][j][0] ) < 2){
-                    //     //bottom hit
-                    //     this.vel[1] = -1 * this.vel[1];
-                    //     brick_health[i][j] -= 1;
-                    //     this.vel[1] = -1 * this.vel[1];
-                    //     console.log('brick bottom hit');
-                    // }
-                    else if(Math.abs(y  - brick_positions[i][j][1]) >= 2
-                        && Math.abs(x - brick_positions[i][j][0] ) < 2){
+                    else if(Math.abs(y - brick_positions[i][j][1] ) < 1
+                        && Math.abs(x  - brick_positions[i][j][0]) <= 2){
                         this.vel[0] = -1 * this.vel[0];
-                        // brick_health[i][j] -= 1;
+                        brick_health[i][j] -= 1;
                         console.log('brick side hit');
                     }
-                    else if(Math.abs(y  - brick_positions[i][j][1]) == 2
-                        && Math.abs(x - brick_positions[i][j][0] ) == 2){
-                        //corner hig
-                        this.vel[0] = -1 * this.vel[0];
-                        this.vel[1] = -1 * this.vel[1];
-                    }
+
                 }
             }
             }
@@ -194,7 +180,7 @@ x
     show(context, program_state){
         for (let i = 0; i < 8; i++) {
             for (let j = 0; j < 8; j++) {
-                if(this.brickHealth != 0){
+                if(this.brickHealth[i][j] > 0){
                     this.draw_individual_cube(i, j, context, program_state)
 
                 }
@@ -376,23 +362,40 @@ export class BrickBreaker extends Scene {
         // }
         this.frame.show(context, program_state);
         this.platform.show(context, program_state, this.platform_position);
-        this.ball.checkCollisionWithBricks(this.brickGrid);
 
 
 
-        this.ball.checkCollisionWithWalls();
-        this.ball.checkCollisionWithPlatform(this.platform);
+
         // this.pause = this.ball.checkIfLost(this.pause);
         //check if lost
         if(this.ball.pos[1] <= -1){
             this.pause = !this.pause;
             this.ball.bindToPlatform(this.platform, this.pause);
+            this.brickGrid.brickHealth = [
+                [2,2,2,2,2,2,2,2],
+                [2,2,2,2,2,2,2,2],
+                [2,2,2,2,2,2,2,2],
+                [2,2,2,2,2,2,2,2],
+                [2,2,2,2,2,2,2,2],
+                [2,2,2,2,2,2,2,2],
+                [2,2,2,2,2,2,2,2],
+                [2,2,2,2,2,2,2,2],
+            ];
+
         }
+
+
+
+        this.ball.checkCollisionWithWalls();
+        this.ball.checkCollisionWithPlatform(this.platform);
+
 
         this.ball.update(dt, !this.pause);
         this.ball.bindToPlatform(this.platform, this.pause);
         this.ball.show(context, program_state);
-        this.brickGrid.show(context, program_state)
+
+        this.ball.checkCollisionWithBricks(this.brickGrid);
+        this.brickGrid.show(context, program_state);
 
 
 
