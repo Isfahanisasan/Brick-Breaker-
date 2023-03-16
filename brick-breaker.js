@@ -12,9 +12,12 @@ const {
     Mat4,
     Light,
     Shape,
+    Texture,
     Material,
     Scene,
 } = tiny;
+
+const {Textured_Phong} = defs
 
 export class Ball {
     constructor() {
@@ -183,10 +186,15 @@ export class Brick_Grid {
                 specularity: 0.9,
                 color: hex_color("#80FFFF"),
             }),
-            matte: new Material(new defs.Phong_Shader(1), {
-                ambient: 0.3,
-                diffusivity: 0,
-                color: hex_color("#80FFFF"),
+            // matte: new Material(new defs.Phong_Shader(1), {
+            //     ambient: 0.3,
+            //     diffusivity: 0,
+            //     color: hex_color("#80FFFF"),
+            // }),
+            hit: new Material(new Textured_Phong(), {
+                color: hex_color("#ffffff"),
+                ambient: 0.5, diffusivity: 0.1, specularity: 0.1,
+                texture: new Texture("assets/stars.png")
             }),
         };
     }
@@ -194,8 +202,9 @@ export class Brick_Grid {
     x;
 
     draw_individual_cube(i, j, context, program_state) {
+
+        let current_brick_pos = this.brickPosition[i][j];
         if (this.brickHealth[i][j] == 2) {
-            let current_brick_pos = this.brickPosition[i][j];
             this.shape.draw(
                 context,
                 program_state,
@@ -209,14 +218,26 @@ export class Brick_Grid {
                 this.materials.shiny.override(this.brickColors[i][j])
             );
         }
+        else if (this.brickHealth[i][j] == 1) {
+            this.shape.draw(
+                context,
+                program_state,
+                Mat4.identity().times(
+                    Mat4.translation(
+                        current_brick_pos[0],
+                        current_brick_pos[1],
+                        current_brick_pos[2]
+                    )
+                ),
+                this.materials.hit.override(this.brickColors[i][j])
+            );
+        }
     }
 
     show(context, program_state) {
         for (let i = 0; i < 8; i++) {
             for (let j = 0; j < 8; j++) {
-                if (this.brickHealth[i][j] > 0) {
                     this.draw_individual_cube(i, j, context, program_state);
-                }
             }
         }
     }
@@ -606,6 +627,7 @@ export class BrickBreaker extends Scene {
         this.ball.update(dt, !this.pause);
         this.ball.bindToPlatform(this.platform, this.pause);
         this.ball.show(context, program_state);
+
 
         this.ball.checkCollisionWithBricks(this.brickGrid);
         this.brickGrid.show(context, program_state);
