@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b9ba320b-24ae-4690-a678-f6adbc89750c" name="Changes" comment="" />
+    <list default="true" id="b9ba320b-24ae-4690-a678-f6adbc89750c" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/brick-breaker.js" beforeDir="false" afterPath="$PROJECT_DIR$/brick-breaker.js" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -53,7 +56,7 @@
       <workItem from="1678176648190" duration="12000" />
       <workItem from="1678839424201" duration="7795000" />
       <workItem from="1678952527126" duration="182000" />
-      <workItem from="1678952745338" duration="1165000" />
+      <workItem from="1678952745338" duration="2360000" />
     </task>
     <servers />
   </component>
