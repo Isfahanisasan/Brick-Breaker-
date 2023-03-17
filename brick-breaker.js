@@ -90,9 +90,7 @@ export class Ball {
         }
     }
 
-    // dist(x1,y1, x2,y2){
-    //     return Math.sqrt((x2-x1) * (x2-x1) + (y2-y1) * (y2-y1))
-    // }
+    // Returns true if ball collided with brick
     checkCollisionWithBricks(brickGrid) {
         let brick_positions = brickGrid.brickPosition;
         let brick_health = brickGrid.brickHealth;
@@ -110,6 +108,7 @@ export class Ball {
                         this.vel[1] = -1 * this.vel[1];
                         brick_health[i][j] -= 1;
                         console.log("brick top/bottom hit");
+                        return true;
                     } else if (
                         Math.abs(y - brick_positions[i][j][1]) < 1 &&
                         Math.abs(x - brick_positions[i][j][0]) <= 2
@@ -117,19 +116,13 @@ export class Ball {
                         this.vel[0] = -1 * this.vel[0];
                         brick_health[i][j] -= 1;
                         console.log("brick side hit");
+                        return true;
                     }
                 }
             }
         }
+        return false;
     }
-
-    // checkIfLost(reset){
-    //     // if(!reset && this.pos[1] <= 0) {
-    //     //     return !reset;
-    //     // }
-    //
-    //     return (!reset) && (this.pos[1] <= 0);
-    // }
 
     setDifficulty(difficulty) {
         this.difficulty = difficulty;
@@ -167,6 +160,7 @@ export class Brick_Grid {
             }
             this.brickPosition.push(row);
         }
+
         this.brickColors = [];
         for (let i = 0; i < 8; i++) {
             let row = [];
@@ -485,29 +479,6 @@ export class BrickBreaker extends Scene {
             vec3(0, 1, 0)
         );
 
-        this.brickHealth = [
-            [2, 1, 2, 1, 1, 2, 1, 2],
-            [2, 2, 2, 2, 2, 2, 2, 2],
-            [2, 2, 2, 2, 2, 2, 2, 1],
-            [2, 2, 2, 2, 2, 2, 2, 2],
-            [2, 2, 2, 2, 2, 2, 2, 2],
-            [2, 2, 2, 2, 2, 2, 2, 2],
-            [2, 2, 2, 2, 2, 2, 2, 2],
-            [2, 2, 2, 2, 2, 2, 1, 2],
-        ];
-
-        this.brickColors = [];
-        for (let i = 0; i < 8; i++) {
-            let row = [];
-            for (let j = 0; j < 8; j++) {
-                // row.push(color(Math.random()/2+0.5, Math.random()/2+0.5, Math.random()/2+0.5, 1.0));
-                row.push(
-                    color(Math.random(), Math.random(), Math.random(), 1.0)
-                );
-            }
-            this.brickColors.push(row);
-        }
-
         this.difficulty = 1;
     }
 
@@ -619,6 +590,7 @@ export class BrickBreaker extends Scene {
                 [2, 2, 2, 2, 2, 2, 2, 2],
                 [2, 2, 2, 2, 2, 2, 2, 2],
             ];
+            this.score.score = 0;
         }
 
         this.ball.checkCollisionWithWalls();
@@ -628,7 +600,9 @@ export class BrickBreaker extends Scene {
         this.ball.bindToPlatform(this.platform, this.pause);
         this.ball.show(context, program_state);
 
-        this.ball.checkCollisionWithBricks(this.brickGrid);
+        if (this.ball.checkCollisionWithBricks(this.brickGrid)) {
+            this.score.increment(100);
+        }
         this.brickGrid.show(context, program_state);
 
         this.score.show(context, program_state);
