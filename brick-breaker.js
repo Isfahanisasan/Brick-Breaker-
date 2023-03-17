@@ -37,11 +37,6 @@ export class Ball {
         this.hit = [];
     }
 
-    //  Updates the position, velocity, and acceleration by euler's method
-    /* velocity = velocity + acceleration * delta_time
-       position = position + velocity * delta_time
-    */
-
     update(dt, start) {
         if (start) {
             this.pos = this.pos.plus(this.vel.times(dt * this.difficulty));
@@ -64,12 +59,13 @@ export class Ball {
         let platform_x = platform.pos[0];
         let platform_y = platform.pos[1];
         //hit on top of platform
-        if (y - platform_y < 2 && Math.abs(x - platform_x) < 2) {
-            this.vel[1] = -1 * this.vel[1];
+        if (
+            y - platform_y < 2 &&
+            y - platform_y > 1.5 &&
+            Math.abs(x - platform_x) < 2
+        ) {
+            this.vel[1] = 8;
         }
-        // else if(Math.abs(x - platform_x ) < 2 && (y  - platform_y) < 1){
-        //     this.vel[0] = -1 * this.vel[0];
-        // }
     }
 
     checkCollisionWithWalls() {
@@ -180,11 +176,7 @@ export class Brick_Grid {
                 specularity: 0.9,
                 color: hex_color("#80FFFF"),
             }),
-            // matte: new Material(new defs.Phong_Shader(1), {
-            //     ambient: 0.3,
-            //     diffusivity: 0,
-            //     color: hex_color("#80FFFF"),
-            // }),
+
             hit: new Material(new Textured_Phong(), {
                 color: hex_color("#ffffff"),
                 ambient: 0.5,
@@ -239,7 +231,6 @@ export class Brick_Grid {
 
 export class Platform {
     constructor() {
-        // this.platform_transform = (Mat4.scale(4,1,1));
         this.platform_transform = Mat4.identity();
         this.pos = vec3(0, 1, 0);
 
@@ -269,9 +260,6 @@ export class Platform {
 
 export class Frame {
     constructor() {
-        // this.pos = vec3(0,0,0)
-        //
-        // this.transform = Mat4.identity().times(Mat4.translation(0,-0.1,0)).times(Mat4.scale(5,0.2,9))
         this.wall_side_model_transform = Mat4.translation(0, 16, 0).times(
             Mat4.scale(1, 16, 1)
         );
@@ -290,7 +278,6 @@ export class Frame {
 
     // Displays the table
     show(context, program_state) {
-        // this.shape.draw(context, program_state, this.transform, this.material);
         this.shape.draw(
             context,
             program_state,
@@ -531,47 +518,7 @@ export class BrickBreaker extends Scene {
 
         const t = program_state.animation_time / 1000,
             dt = program_state.animation_delta_time / 1000;
-        //
-        // // Wall
-        // // stretch Y by 16 -> translate Y +16, X -0.5
-        // const wall_side_model_transform = Mat4.translation(0,16,0).times(Mat4.scale(1,16,1));
-        // const wall_top_model_transform = Mat4.translation(16,33,0).times(Mat4.scale(18,1,1));
-        // this.shapes.cube.draw(context, program_state, Mat4.translation(-1,0,0).times(wall_side_model_transform),
-        //     this.materials.shiny);
-        // this.shapes.cube.draw(context, program_state, Mat4.translation(33,0,0).times(wall_side_model_transform),
-        //     this.materials.shiny);
-        // this.shapes.cube.draw(context, program_state, wall_top_model_transform,
-        //     this.materials.shiny);
 
-        // Bricks
-        // for (let i = 0; i < 8; i++) {
-        //     for (let j = 0; j < 8; j++) {
-        //         this.shapes.cube.draw(context, program_state, Mat4.translation(9 + 2 * j, 13 + 2 * i, 0),
-        //             (this.brickHealth[i][j] === 1 ? this.materials.matte : this.materials.shiny).override(this.brickColors[i][j]))
-        //     }
-        // }
-
-        //this.shapes.cube.draw(context, program_state, Mat4.identity(), this.materials.matt
-
-        //platform
-        // var ball_platform_transform = Mat4.identity();
-        // var platform_transform = Mat4.identity();
-        //
-        // ball_platform_transform = Mat4.translation(16,1,0);
-        // ball_platform_transform = ball_platform_transform.times(Mat4.translation(this.dir, 0, 0));
-        //
-        //
-        // var platform_transform = ball_platform_transform.times(Mat4.scale(4,1,1));
-        //
-        //
-        // var ball_transform = ball_platform_transform.times(Mat4.translation(0,1,0));
-        //
-        //
-        //
-        // // var ball_transform = Mat4.identity();
-        // if(!this.pause){
-        //     ball_transform = ball_transform.times(Mat4.translation(2 * t,2 * t,0));
-        // }
         this.frame.show(context, program_state);
         this.platform.show(context, program_state, this.platform_position);
 
@@ -606,14 +553,5 @@ export class BrickBreaker extends Scene {
         this.brickGrid.show(context, program_state);
 
         this.score.show(context, program_state);
-
-        // if(this.pause){
-        //     ball_transform = platform_transform;
-        // }
-        // else{
-        //     ball_transform = ball_transform.times(Mat4.translation(1,1,0))
-        // }
-        // this.shapes.ball.draw(context, program_state, ball_transform, this.materials.ball);
-        // this.shapes.platform.draw(context, program_state, platform_transform, this.materials.shiny);
     }
 }
